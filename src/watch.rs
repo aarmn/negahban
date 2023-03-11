@@ -32,7 +32,7 @@ use crate::hashset;
 
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct WatchMan<DT: 'static> // pub crate
+pub struct Negahban<DT: 'static> // pub crate
 {
     pub path: PathBuf,
     pub triggers: HashSet<My_EventKind>,
@@ -42,7 +42,7 @@ pub struct WatchMan<DT: 'static> // pub crate
     pub ignore: Option<PathBuf>,
 }
 
-impl<DT> WatchMan<DT>
+impl<DT> Negahban<DT>
 {
     pub fn new(
         path: PathBuf,
@@ -61,7 +61,7 @@ impl<DT> WatchMan<DT>
         // let ignore =canonicalize(ignore)
         // ignore.into_iter().map(|val| canonicalize(val).unwrap());
 
-        WatchMan {
+        Negahban {
             path,
             triggers,
             hook,
@@ -100,7 +100,7 @@ impl<DT> WatchMan<DT>
     }
 }
 
-impl Default for WatchMan<Option<()>> // better
+impl Default for Negahban<Option<()>> // better
 {
     fn default() -> Self {
         Self::new(

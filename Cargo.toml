@@ -9,11 +9,11 @@ license = "Apache-2.0"
 readme = "readme.md" # readme-cargo.md
 description = "🕵 A better and simple file watcher, based on notify, designed to be simple and async friendly"
 rust-version = "1.67.0"
+keywords = ["watcher", "filesystem", "watchexec"]
+categories = ["asynchronous", "filesystem"]
+
 # include = 
 # exclude = ["assets/", "tools/", ".github/", "crates/"]
-
-categories = ["game-engines", "graphics", "gui", "rendering"]
-keywords = ["game", "engine", "gamedev", "graphics", "bevy"]
 
 
 [dependencies]

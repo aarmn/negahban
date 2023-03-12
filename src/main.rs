@@ -1,9 +1,13 @@
 // mod watch;
 
-fn main() {
-//     // use watcher defined in watch.rs
-//     let mut watcher = watch::WatchMan::new(
+use std::{path::PathBuf};
 
-//     );
-//     watcher.watch()
+use negahban::Negahban;
+
+fn main() {
+    let a = negahban::Negahban{
+        hook: Box::new(|event, _| (println!("{:?}", event))),
+        ..Negahban::default()
+    };
+    a.run()
 }

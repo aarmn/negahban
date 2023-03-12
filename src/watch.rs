@@ -2,7 +2,6 @@
 // TODO: Vector based ignore
 // TODO: More imports from watchexec capabilites and ideas
 // TODO: Traits setup
-// TODO: Implement in the code the watch
 // TODO: Document it
 // TODO: Partial Equal and Equal for EventKind
 // TODO: Impl more stuff

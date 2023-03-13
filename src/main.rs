@@ -1,8 +1,9 @@
-use negahban::Negahban;
+use negahban::{Negahban};
 
 fn main() {
-    negahban::Negahban{
-        hook: Box::new(|event, _| (println!("{:?}", event))),
-        ..Negahban::default()
-    }.run();
+    Negahban{
+        // fields you want to change e.g.: 
+        hook: Box::new(|event, _| (println!("{:#?}", event))),
+        ..Negahban::default() // sets rest of them to default
+    }.watch();
 }

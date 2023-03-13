@@ -3,9 +3,9 @@ name = "negahban"
 authors = ["aarmn <aarmn80@gmail.com>"]
 homepage = "https://github.com/aarmn/negahban" # acctually repo
 repository = "https://github.com/aarmn/negahban"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
-license = "Apache-2.0"
+license = "MIT"
 readme = "readme.md" # readme-cargo.md
 description = "🧐 A simple file watcher, based on `notify`, designed to be fast, easy-to-use and async friendly"
 rust-version = "1.67.0"
@@ -13,7 +13,7 @@ keywords = ["watcher", "filesystem", "watchexec"]
 categories = ["asynchronous", "filesystem"]
 
 # include = 
-# exclude = ["assets/", "tools/", ".github/", "crates/"]
+# exclude = [".github/", "crates/"] # "assets/", "tools/", 
 
 [dependencies]
 derivative = "2.2.0"

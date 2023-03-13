@@ -3,7 +3,6 @@
 // TODO: More imports from watchexec capabilites and ideas
 // TODO: Traits setup
 // TODO: Document it
-// TODO: Partial Equal and Equal for EventKind
 // TODO: Impl more stuff
 // TODO: Get rid of all bad unwraps and clones
 // TODO: Handle Ctrl+C and Other Signals better
@@ -11,6 +10,10 @@
 // TODO: Implement WatchMode, RecurseMode and HookType
 // TODO: Handle Command Running better
 // TODO: Less Redundent Events
+// TODO: Free up possible resources in case of OS watcher, if not freed
+// TODO: Termination status return
+// TODO: Use miette or sth else for better erros
+// TODO: Async and Nonblocking support
 
 use std::{
     env,
@@ -25,8 +28,6 @@ use notify::{*, Watcher};
 use derivative::Derivative;
 use crate::enums::EventType;
 use crate::hashset;
-
-// fn match_event 
 
 fn is_included_event_type (event: &Event, event_type_hashmap: &HashSet<EventType>) -> bool {
     event_type_hashmap.into_iter().any(|event_type| event_type == &event.kind)
@@ -47,7 +48,7 @@ pub struct Negahban<DT: 'static> // pub crate
 impl<DT> Negahban<DT>
 {
 
-    pub fn run(&self) {
+    pub fn watch(&self) {
 
         let path = canonicalize(&self.path).unwrap();
         let ignore = if let Some(ignore) = &self.ignore {
@@ -103,7 +104,7 @@ impl Default for Negahban<Option<()>> // better
                 EventType::Modify,
                 EventType::Remove
             ],
-            hook: Box::new(|_event: &Event, _none_var: &Option<_>| ()),
+            hook: Box::new(|_: &Event, _: &Option<_>| ()),
             hook_data: &None,
             ignore: None,
         }

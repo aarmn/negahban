@@ -1,7 +1,8 @@
 Negahban
 ========
 
-🧐 A simple file watcher, based on `notify`, designed to be fast, easy-to-use and async friendly
+🧐 A simple file watcher, based on `notify`, designed to be fast, easy-to-use and async friendly.
+**Project is alpha, it may fail at any given moment, heavily WIP**
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/aarmn/negahban/blob/main/LICENSE)
 [![Crates.io](https://img.shields.io/crates/v/negahban.svg)](https://crates.io/crates/negahban)
@@ -11,6 +12,10 @@ Negahban
 <!-- [![Build Status](https://github.com/aarmn/negahban/actions/workflows/rust.yml/badge.svg)](https://github.com/aarmn/negahban/actions) -->
 <!-- ![Rust Version](https://img.shields.io/badge/rust-1.67.0-orange.svg) -->
 
+Name 😀
+--------
+Negahban(نگهبان) is a farsi word which translates roughly to watchman/sentinel
+
 Overview 📊
 --------
 
@@ -18,7 +23,7 @@ Overview 📊
 
 This library is designed to be:
 
-*   Simple, Sane defaults ✅
+*   Simple, Sane defaults 🌱
 *   Blazing Fast 🚀
 *   Async friendly 🔀
 *   Cross-platform 🌐
@@ -38,18 +43,20 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-negahban = "0.2.1"
+negahban = "x.x.x" # last semver instead of x.x.x
 ```
 
 A minimal example that monitors the current directory and logs events to the console:
 
 ```rust
 use negahban::Negahban;
+
 fn main() {
-    Negahban {
-        hook: Box::new(|event, _| println!("{:?}", event)),
-        ..Negahban::default()
-    }.run();
+    Negahban{
+        // fields you want to change e.g.: 
+        hook: Box::new(|event, _| (println!("{:#?}", event))),
+        ..Negahban::default() // sets rest of them to default
+    }.watch();
 }
 ```
 

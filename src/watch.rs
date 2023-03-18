@@ -23,14 +23,12 @@ use std::{
     path::PathBuf,
     time::Duration,
     sync::mpsc,
-    marker::PhantomData,
 };
 use notify::{*, Watcher};
 use derivative::Derivative;
 use crate::enums::EventType;
 use crate::hashset;
 
-type NegahbanHook<INP,OUT> = Box<dyn Fn(&Event, INP) -> OUT>;
 
 fn is_included_event_type (event: &Event, event_type_hashmap: &HashSet<EventType>) -> bool {
     event_type_hashmap.iter().any(|event_type| event_type == &event.kind)
@@ -41,7 +39,7 @@ fn is_included_event_type (event: &Event, event_type_hashmap: &HashSet<EventType
  */
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct Negahban<DT: 'static = PhantomData<!>>
+pub struct Negahban<'negahban>
 {
     /// Root path to be watched
     pub path: PathBuf,
@@ -51,19 +49,16 @@ pub struct Negahban<DT: 'static = PhantomData<!>>
 
     /// the hook to be run on trigger events being emitted, default is a ignore Boxed closure that does nothing
     #[derivative(Debug="ignore")]
-    pub hook: NegahbanHook<&'static DT, ()>, // we can return a hook channel as well
-
-    /// data to be passed to the hook, it can be anything, default is PhantomData <!-- TODO: default can be better -->
-    pub hook_data: &'static DT,
+    pub hook: Box<dyn FnMut(&Event) + 'negahban>, // we can return a hook channel as well
 
     /// ignore path <!-- TODO: should be able to ignore more than one path, can be an Enum which takes a file as well -->
     pub ignore: Option<PathBuf>, 
 }
 
-impl<DT> Negahban<DT>
+impl Negahban<'_>
 {
 
-    pub fn watch(&self) {
+    pub fn watch(&mut self) {
 
         let path = canonicalize(&self.path).unwrap();
         let ignore = if let Some(ignore) = &self.ignore {
@@ -93,7 +88,7 @@ impl<DT> Negahban<DT>
 
         let watcher_loop = receiver;
     
-        // monitors events, if an event match the event type, and files/dirs are not ignored, run hook with the event
+        // monitors events, if an event match the event type and files/dirs are not ignored, run hook with the event
         for e in watcher_loop {
             let e = e.unwrap();
             if (is_included_event_type(&e, &self.triggers)) && // event type match 
@@ -103,13 +98,13 @@ impl<DT> Negahban<DT>
                 .into_iter()
                 .any(|notif_path| if let Some(ignore) = &ignore {!notif_path.starts_with(ignore.clone())} else {true}))
             { // any path do not start with ignore paths
-                (self.hook)(&e,self.hook_data);
+                (self.hook)(&e);
             }
         }
     }
 }
 
-impl Default for Negahban
+impl Default for Negahban<'_>
 {
     fn default() -> Self {
         Self {
@@ -119,8 +114,7 @@ impl Default for Negahban
                 EventType::Modify,
                 EventType::Remove
             ],
-            hook: Box::new(|_: &Event, _: &PhantomData<_>| ()),
-            hook_data: &PhantomData,
+            hook: Box::new(|_: &Event| ()),
             ignore: None,
         }
     }

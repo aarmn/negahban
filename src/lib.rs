@@ -1,3 +1,5 @@
+#![feature(never_type)]
+
 /*! A simple file watcher, based on notify, designed to be fast,
  * easy-to-use and async friendly
  * 

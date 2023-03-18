@@ -1,6 +1,6 @@
 // TODO: Test the code and write test for code
 // TODO: Vector based ignore
-// TODO: More imports from watchexec capabilites and ideas
+// TODO: More imports from watchexec capabilities and ideas
 // TODO: Traits setup
 // TODO: Document it
 // TODO: Impl more stuff
@@ -9,10 +9,10 @@
 // TODO: Write a simple CLI for it with clai and stuff as a feature
 // TODO: Implement WatchMode, RecurseMode and HookType
 // TODO: Handle Command Running better
-// TODO: Less Redundent Events
+// TODO: Less redundant events
 // TODO: Free up possible resources in case of OS watcher, if not freed
 // TODO: Termination status return
-// TODO: Use miette or sth else for better erros
+// TODO: Use miette or sth else for better errors
 // TODO: Async and Nonblocking support
 
 use std::{
@@ -23,26 +23,41 @@ use std::{
     path::PathBuf,
     time::Duration,
     sync::mpsc,
+    marker::PhantomData,
 };
 use notify::{*, Watcher};
 use derivative::Derivative;
 use crate::enums::EventType;
 use crate::hashset;
 
+type NegahbanHook<INP,OUT> = Box<dyn Fn(&Event, INP) -> OUT>;
+
 fn is_included_event_type (event: &Event, event_type_hashmap: &HashSet<EventType>) -> bool {
-    event_type_hashmap.into_iter().any(|event_type| event_type == &event.kind)
+    event_type_hashmap.iter().any(|event_type| event_type == &event.kind)
 }
 
+/** The main struct of negahban crate
+ * 
+ */
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct Negahban<DT: 'static> // pub crate
+pub struct Negahban<DT: 'static = PhantomData<!>>
 {
+    /// Root path to be watched
     pub path: PathBuf,
+
+    /// ['hashset'] of all the events to be watched, default is: ```hashset![EventType::Create,EventType::Modify,EventType::Remove]```
     pub triggers: HashSet<EventType>,
+
+    /// the hook to be run on trigger events being emitted, default is a ignore Boxed closure that does nothing
     #[derivative(Debug="ignore")]
-    pub hook: Box<dyn Fn(&Event, &DT) -> ()>,
+    pub hook: NegahbanHook<&'static DT, ()>, // we can return a hook channel as well
+
+    /// data to be passed to the hook, it can be anything, default is PhantomData <!-- TODO: default can be better -->
     pub hook_data: &'static DT,
-    pub ignore: Option<PathBuf>,
+
+    /// ignore path <!-- TODO: should be able to ignore more than one path, can be an Enum which takes a file as well -->
+    pub ignore: Option<PathBuf>, 
 }
 
 impl<DT> Negahban<DT>
@@ -86,15 +101,15 @@ impl<DT> Negahban<DT>
                 .clone()
                 .paths
                 .into_iter()
-                .any(|notif_path| if let Some(ignore) = &ignore {notif_path.starts_with(ignore.clone()) == false} else {true}))
-            { // any path do not start with ignore pathes
+                .any(|notif_path| if let Some(ignore) = &ignore {!notif_path.starts_with(ignore.clone())} else {true}))
+            { // any path do not start with ignore paths
                 (self.hook)(&e,self.hook_data);
             }
         }
     }
 }
 
-impl Default for Negahban<Option<()>> // better
+impl Default for Negahban
 {
     fn default() -> Self {
         Self {
@@ -104,8 +119,8 @@ impl Default for Negahban<Option<()>> // better
                 EventType::Modify,
                 EventType::Remove
             ],
-            hook: Box::new(|_: &Event, _: &Option<_>| ()),
-            hook_data: &None,
+            hook: Box::new(|_: &Event, _: &PhantomData<_>| ()),
+            hook_data: &PhantomData,
             ignore: None,
         }
     }

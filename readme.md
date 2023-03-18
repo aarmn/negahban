@@ -32,7 +32,7 @@ Features ✨
 --------
 
 *   Supports multiple event types such as file creation, deletion, and modification.
-*   Provides `HookType`, `WatchMode`, and `RecurseMode` configuration options.
+*   [WIP] Provides `HookType`, `EventType`, `WatchMode`, `RecurseMode`, `WatcherMode` configuration as simple to use enums.
 *   Can ignore specific files and directories.
 *   Easy to use and async friendly.
 

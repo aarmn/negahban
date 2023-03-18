@@ -64,7 +64,7 @@ impl PartialEq<EventType> for EventKind {
     }
 }
 
-/** [WIP] Determines the type of watcher used by the `notify` crate.
+/** Determines the type of watcher used by the `notify` crate.
  *
  * The default value is `WatcherMode::Auto`, which uses the system's native watcher, if available.
  * Other options include `WatcherMode::Poll`, which periodically polls the file system for changes,

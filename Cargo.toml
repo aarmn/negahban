@@ -13,7 +13,7 @@ keywords = ["watcher", "filesystem", "watchexec"]
 categories = ["asynchronous", "filesystem"]
 
 # include = 
-# exclude = [".github/", "crates/"] # "assets/", "tools/", 
+# exclude = [".github/", "crates/", ".justfile"] # "assets/", "tools/", 
 
 [dependencies]
 derivative = "2.2.0"

@@ -20,6 +20,7 @@
 // TODO: Multi: More imports from watchexec capabilities and ideas
 
 
+use std::ffi::OsString;
 use std::ops::ControlFlow;
 use std::{
     env,
@@ -58,7 +59,7 @@ pub struct Negahban<'negahban>
     pub hook: HookType<'negahban>, // Maybe a termination var in B can be good
 
     /// ignore path <!-- TODO: should be able to ignore more than one path, can be an Enum which takes a file as well -->
-    pub ignore: Option<PathBuf>, 
+    pub ignore: Vec<OsString>,
 
     /// 
     pub watcher_mode: WatcherMode,
@@ -90,15 +91,9 @@ impl Negahban<'_>
 
         // prepare some of struct variables, to be used.
         let path = canonicalize(&self.path).unwrap();
-        let ignore = if let Some(ignore) = &self.ignore {
-            Some(canonicalize(ignore).unwrap())
-        } else {
-            None
-        };
-
-        // TODO: multipath ignore support
-        // let ignore =canonicalize(ignore)
-        // ignore.into_iter().map(|val| canonicalize(val).unwrap());
+        let mut ignores = self.ignore.iter().map(|path| {
+            PathBuf::from(&path).canonicalize().unwrap_or_default()
+        });
 
         let (sender, receiver) = mpsc::channel();
 
@@ -141,11 +136,18 @@ impl Negahban<'_>
             match e {
                 Ok(e) => {
                     if (is_included_event_type(&e, &self.triggers)) && // event type match 
-                    (e
-                        .clone()
+                    ((&e)
                         .paths
-                        .into_iter()
-                        .any(|notif_path| if let Some(ignore) = &ignore {!notif_path.starts_with(ignore.clone())} else {true}))
+                        .iter()
+                        .any(
+                            |event_path| {
+                                ignores.clone().all(|ignore| {
+                                    let res = !(event_path.starts_with(ignore.clone()));
+                                    // eprintln!("ignore: {ignore:#?}, path: {event_path:#?}, {res:#?}");
+                                    res
+                                })
+                            }
+                        ))
                     { // any path do not start with ignore paths
                         match &mut self.hook {
                             HookType::ControledHook(hook) => return hook(&e),
@@ -176,8 +178,16 @@ impl Default for Negahban<'_>
             hook: HookType::IndefiniteHook(
                 Box::new(|_: &Event| ())
             ),
-            ignore: None,
+            ignore: vec![],
             watcher_mode: WatcherMode::Auto,
         }
     }
 }
+
+// pub fn load_pathes_from_file() {
+//     
+// }
+// pub fn load_pathes_from_globes_file() {
+//     
+// }
+// load gitignore, vscodeignore, editorconfig ignore, and maybe env files as well, and json

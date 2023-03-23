@@ -3,7 +3,7 @@ name = "negahban"
 authors = ["aarmn <aarmn80@gmail.com>"]
 homepage = "https://github.com/aarmn/negahban" # acctually repo
 repository = "https://github.com/aarmn/negahban"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2021"
 license = "MIT"
 readme = "readme.md" # readme-cargo.md
@@ -20,3 +20,4 @@ derivative = "2.2.0"
 notify = {version = "5.1.0", features = ["mio"], optional = false}
 
 [dev-dependencies]
+

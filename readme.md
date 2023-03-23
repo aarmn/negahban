@@ -39,22 +39,23 @@ Features ✨
 Usage 🔨
 -----
 
-Add this to your `Cargo.toml`:
+Run this in your rust project folder:
 
-```toml
-[dependencies]
-negahban = "x.x.x" # last semver instead of x.x.x
+```bash
+cargo add negahban
 ```
 
 A minimal example that monitors the current directory and logs events to the console:
 
-```rust
-use negahban::Negahban;
+```rust,no_run
+use negahban::{Negahban, HookType};
 
 fn main() {
     Negahban{
         // fields you want to change e.g.: 
-        hook: Box::new(|event, _| (println!("{:#?}", event))),
+        hook: HookType::IndefiniteHook(
+            Box::new(|event| (println!("{event:#?}")))
+        ),
         ..Negahban::default() // sets rest of them to default
     }.watch();
 }

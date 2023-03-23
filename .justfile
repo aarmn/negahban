@@ -5,7 +5,10 @@ alias cmp_head := compare_before_to_head
 alias rev_last := revert_to_head
 alias rev_semi := revert_to_semihead
 
-# Im a git n00b
+#>>>>>>>>>>>>>>>#
+# Im a git n00b #
+#>>>>>>>>>>>>>>>#
+
 # doc comment
 compare_head_to_now FILE="":
     GIT_EXTERNAL_DIFF=difft git diff HEAD {{FILE}}
@@ -22,17 +25,24 @@ revert_to_head SH="":
 # doc comment
 revert_to_semihead SH="":
 
+#<<<<<<<<<<<<<<<#
+# Im a git n00b #
+#<<<<<<<<<<<<<<<#
 
-# add commit push (takes a commit msg)
-# doc comment
+# add files, build, test, commit the changes, and push to origin
 apply MSG="":
     git add .
+    cargo build
+    cargo test
     git commit -m "{{MSG}}"
     git push origin
+    # TODO: CI Stuff as well maybe here or in publish
 
-# publish to crate.io, //TODO: bump to next version possible
-# publish: apply:
-#     cargo build
-#     cargo test
-#     cargo publish --dry-run
-#     cargo publish
+# publishes 
+publish MSG="":
+    just apply {{MSG}}
+    cargo publish --dry-run
+    cargo publish
+    # TODO: bump to next version, before pub, if possible
+
+apply_and_pub: apply && publish

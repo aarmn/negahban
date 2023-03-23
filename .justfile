@@ -40,7 +40,7 @@ apply MSG="":
 
 # publishes 
 publish MSG="":
-    just apply {{MSG}}
+    # just apply {{MSG}}
     cargo publish --dry-run
     cargo publish
     # TODO: bump to next version, before pub, if possible

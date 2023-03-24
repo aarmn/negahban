@@ -92,7 +92,7 @@ impl Negahban<'_>
         // prepare some of struct variables, to be used.
         let path = canonicalize(&self.path).unwrap();
         let mut ignores = self.ignore.iter().map(|path| {
-            PathBuf::from(&path).canonicalize().unwrap_or_default()
+            PathBuf::from(&path).canonicalize().unwrap()//_or_default()
         });
 
         let (sender, receiver) = mpsc::channel();
@@ -169,7 +169,7 @@ impl Default for Negahban<'_>
 {
     fn default() -> Self {
         Self {
-            path: env::current_dir().unwrap_or_default(),
+            path: env::current_dir().unwrap(),//_or_default(),
             triggers: hashset![
                 EventType::Create,
                 EventType::Modify,

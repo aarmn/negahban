@@ -64,7 +64,7 @@ fn main() {
 Examples 👨‍💻
 --------
 
-See the [`examples/`](https://github.com/aarmn/negahban/tree/main/examples) directory for more examples.
+Check the [`tests/`](https://github.com/aarmn/negahban/tree/main/tests) directory for more examples.
 
 License ⚖
 -------

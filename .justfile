@@ -34,6 +34,7 @@ apply MSG="":
     git add .
     cargo build
     cargo test
+    cargo clippy
     git commit -m "{{MSG}}"
     git push origin
     # TODO: CI Stuff as well maybe here or in publish

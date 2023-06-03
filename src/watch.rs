@@ -3,22 +3,21 @@
 // TODO: Support: ctrlc, Handle Ctrl+C and Other Signals better
 // TODO: Support: Setup some more traits of your own if needed?
 // TODO: Control: Async and Nonblocking Hooks
-// TODO: Control: Intervals control
 // TODO: Control: Configs finer control
 // TODO: Control: control over error conditions by hook
 // TODO: Control: Termination status return, being able to stop the process
-// TODO: Control: Vector based ignore
-// TODO: Impl: New enums connect to code (WatchMode, RecurseMode and HookType)
+// TODO: Impl: New enums connect to code (WatchMode)
 // TODO: Doc: Fix The Docs and the 
 // TODO: Bugs: Free up possible resources in case of OS watcher, if not freed
 // TODO: Bugs: Less redundant events
-// TODO: Feature: Handle Command Running better, a simple CLI for it with clap and stuff as a feature
+// TODO: Feature: Handle Command Running better, a simple CLI for it with clap and stuff as a feature, and let tokio as a feature for provider of mpsc channel
 // TODO: Cleanup: Get rid of all bad unwraps and clones
 // TODO: Cleanup: Impl more stuff
 // TODO: Test: test it and  write test for code
-// TODO: CI: setup ci stuff, auto ver bump, test, better just file, ...
+// TODO: CI: setup ci stuff, auto ver bump, github action, test, better just file, ...
 // TODO: Multi: More imports from watchexec capabilities and ideas
-
+// TODO: Buffer overflow in lots of action being added to the stack of changes of it
+// TODO: Thread based handle
 
 use std::ffi::OsString;
 use std::ops::ControlFlow;
@@ -31,11 +30,18 @@ use std::{
     time::Duration,
     sync::mpsc,
 };
-use notify::{*, Watcher};
+use notify::{
+    Watcher,
+    Config,
+    Event,
+    PollWatcher, 
+    WatcherKind,
+    RecommendedWatcher,
+    RecursiveMode
+};
 use derivative::Derivative;
 use crate::enums::{EventType, HookType};
-use crate::{hashset, WatcherMode};
-
+use crate::{hashset, WatcherMode, RecurseMode};
 
 fn is_included_event_type (event: &Event, event_type_hashmap: &HashSet<EventType>) -> bool {
     event_type_hashmap.iter().any(|event_type| event_type == &event.kind)
@@ -63,88 +69,69 @@ pub struct Negahban<'negahban>
 
     /// 
     pub watcher_mode: WatcherMode,
+
+    /// 
+    pub recurse: RecurseMode,
 }
 
 impl Negahban<'_>
 {
-    fn choose_native_watcher() -> Option<WatcherKind> {
-        match env::consts::OS {
-            "windows" => {
-                Some(WatcherKind::ReadDirectoryChangesWatcher)
-            }
-            "android" | "linux" => {
-                Some(WatcherKind::Inotify)
-            }
-            "macos" => {
-                Some(WatcherKind::Fsevent)
-            }
-            "ios" | "bsd" | "freebsd" | "openbsd" | "netbsd" | "dragonfly" => {
-                Some(WatcherKind::Kqueue)
-            }
-            _ | "solaris" => {
-                None
-            }
-        }
-    }
-
-    pub fn watch(&mut self) {
+    pub fn watch(&mut self) -> std::result::Result<(), NegahbanError> { // return sth 
 
         // prepare some of struct variables, to be used.
-        let path = canonicalize(&self.path).unwrap();
-        let mut ignores = self.ignore.iter().map(|path| {
-            PathBuf::from(&path).canonicalize().unwrap()//_or_default()
+        let path = canonicalize(&self.path).map_err(NegahbanError::InvalidPath)?;
+
+        let ignores = self.ignore.iter().map(|path| {
+            PathBuf::from(&path).canonicalize()
         });
 
-        let (sender, receiver) = mpsc::channel();
+        let (sender, receiver) = mpsc::channel(); // here can we do tokio type one?
 
         let mut watcher: Box<dyn Watcher> = match self.watcher_mode {
-            WatcherMode::Poll(duration) => {
-                todo!()
-                // .with_compare_contents(compare_contents);
+            WatcherMode::Poll(config) => {
+                Box::new(PollWatcher::new(sender, config).unwrap()) // it cannot fail
             },
             WatcherMode::Native => {
-                todo!()
+                if RecommendedWatcher::kind() == WatcherKind::PollWatcher {
+                    return Err(NegahbanError::NoNativeWatcherAvailable);
+                }
+                else {
+                    Box::new(RecommendedWatcher::new(sender, Config::default()).unwrap())
+                }
             },
             WatcherMode::Auto => {
                 if RecommendedWatcher::kind() == WatcherKind::PollWatcher {
                     let config = Config::default()
-                        .with_poll_interval(Duration::from_secs(1));
-                    // TODO: check configs, make intevrals user controlable
+                        .with_poll_interval(Duration::from_secs(1))
+                        .with_compare_contents(true);
                     Box::new(PollWatcher::new(sender, config).unwrap()) // TODO: why unwrapped?
                 } else {
-                    // TODO: check configs
                     Box::new(RecommendedWatcher::new(sender, Config::default()).unwrap())
                 }
-            },
-            WatcherMode::Specific(watcher_kind, config) => {
-                // Box::new(
-                //     (Self::choose_native_watcher(watcher_kind).unwrap())
-                //     ::new(sender, Config::default()).unwrap()
-                // )
-                todo!()
             },
         };
     
         watcher
-            .watch(Path::new(&path), RecursiveMode::Recursive)
+            .watch(Path::new(&path), self.recurse)
             .unwrap();
 
         let watcher_loop = receiver;
     
         // monitors events, if an event match the event type and files/dirs are not ignored, run hook with the event
-        watcher_loop.iter().try_for_each(|e| {
+        watcher_loop.iter().try_for_each(|e| { // try_for_each is used for controlflow based hooks
             match e {
                 Ok(e) => {
                     if (is_included_event_type(&e, &self.triggers)) && // event type match 
-                    ((&e)
+                    ((e)
                         .paths
                         .iter()
                         .any(
                             |event_path| {
                                 ignores.clone().all(|ignore| {
-                                    let res = !(event_path.starts_with(ignore.clone()));
-                                    // eprintln!("ignore: {ignore:#?}, path: {event_path:#?}, {res:#?}");
-                                    res
+                                    match ignore {
+                                        Ok(ignore) => !(event_path.starts_with(ignore)), // make it clone if ignore be used later
+                                        Err(_) => true,
+                                    }
                                 })
                             }
                         ))
@@ -162,6 +149,8 @@ impl Negahban<'_>
                 }
             }
         });
+
+        Ok(())
     }
 }
 
@@ -180,6 +169,7 @@ impl Default for Negahban<'_>
             ),
             ignore: vec![],
             watcher_mode: WatcherMode::Auto,
+            recurse: RecursiveMode::Recursive,
         }
     }
 }
@@ -191,3 +181,10 @@ impl Default for Negahban<'_>
 //     
 // }
 // load gitignore, vscodeignore, editorconfig ignore, and maybe env files as well, and json
+
+
+/* Error for the negahbar crate */
+pub enum NegahbanError {
+    NoNativeWatcherAvailable,
+    InvalidPath(std::io::Error),
+}

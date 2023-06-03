@@ -1,5 +1,7 @@
 use negahban::{HookType, Negahban};
 
+#[test]
+#[ignore]
 fn main() {
     let mut events_count = 0;
     let _ = Negahban{

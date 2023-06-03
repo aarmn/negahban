@@ -1,7 +1,7 @@
-use std::{ops::ControlFlow, time::Duration};
+use std::{ops::ControlFlow};
 
 pub use notify::RecursiveMode as RecurseMode;
-use notify::{EventKind, Event, WatcherKind, Config};
+use notify::{EventKind, Event, Config};
 
 // TODO: check for running mistakes
 // TODO: doc bettering of syntax (bevy inspired) 
@@ -78,8 +78,8 @@ impl PartialEq<EventType> for EventKind {
  *  - Windows API on Windows
  * 
  * Note: Only change the default value if you have a **good** reason to do so. If you need more fine-grained
- * control over the watcher, consider using [`notify`] directly or [`WatcherMode::Specific`] and take a look
- * at [`notify::RecommendedWatcher`] and [`notify::WatcherKind`].
+ * control over the watcher, consider using [`notify`] directly and take a look at [`notify::RecommendedWatcher`]
+ * and [`notify::WatcherKind`].
  */
 #[derive(Hash, Debug, PartialEq, Eq)]
 pub enum WatcherMode {
@@ -89,24 +89,30 @@ pub enum WatcherMode {
 
     /// Use if you specifically want a PollWatcher, even if a native watcher is available.
     /// This would be marginally slower and more cpu intensive than a native watcher.
-    Poll(Duration), // TODO: default duration??
+    Poll(Config), 
 
     /// Not Recommended: Use if you specifically want a native watcher, it would **panic** if cannot be used.
     Native,
-
-    /// **Not Recommended:** Forcing to use a specific watcher and **panics** if it is not available.
-    Specific(WatcherKind, Config),
 }
 
 /// Determines the type of hook to be called on the chosen events occurrence
-pub enum HookType<'Time> {
+pub enum HookType<'time> {
     /// Used to carry a hook, which return a callback, able to terminate the watcher 
     /// cycle; but has to return a [`ControlFlow`][`std::ops::ControlFlow`]
-    ControledHook(ControledHook<'Time,(),()>), // TODO: should be generic over control flow types?
+    ControledHook(ControledHook<'time,(),()>), // TODO: should be generic over control flow types?
 
     /// Used to carry an indefinite hook, which after running there is no way to terminate,
     /// unless you run it in a thread and terminate it by terminating the thread.
-    IndefiniteHook(IndefiniteHook<'Time>),
+    IndefiniteHook(IndefiniteHook<'time>),
+}
+
+/// Determines the type of error handling (of fs events) to be done on the watcher,
+pub enum EventErrorHandleType {
+    Panic,
+    Ignore,
+    IgnoreDebug,
+    Return,
+    // Hook,
 }
 
 // /** 
